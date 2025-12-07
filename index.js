@@ -2,14 +2,17 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./src/config/db");
-const  route  = require("./src/router/index");
+const route = require("./src/router/index");
 
 const app = express();
 
 // Middleware
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://unrivaled-lebkuchen-87ccee.netlify.app",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
