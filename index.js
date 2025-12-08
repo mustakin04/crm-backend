@@ -11,7 +11,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://atlascrm.netlify.app",
+      "https://frabjous-ganache-551583.netlify.app",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
