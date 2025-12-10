@@ -40,6 +40,36 @@ const getMyClients = async (req, res) => {
   }
 };
 
+// update single client
+const updateClient = async (req, res) => {
+  try {
+    const { id } = req.params; // /api/v1/client/:id
+    const updates = req.body;
+     console.log(id,"iddd")
+    // খুঁজে নাও ক্লায়েন্ট
+    const client = await Client.findById(id);
+    if (!client) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+
+    // User-specific check (admin না হলে)
+    if (req.user.role !== "admin" && client.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to update this client" });
+    }
+
+    // Update
+    Object.keys(updates).forEach((key) => {
+      client[key] = updates[key];
+    });
+
+    await client.save();
+
+    res.json({ message: "Client updated successfully", client });
+  } catch (err) {
+    console.error("Update client error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
 // ⭐ Get My Clients (Dashboard Data)
 const getDashboardData = async (req, res) => {
   try {
@@ -103,4 +133,4 @@ const getClientCount = async (req, res) => {
   }
 };
 
-module.exports={createClient,getMyClients,getDashboardData,getClientCount}
+module.exports={createClient,getMyClients,updateClient,getDashboardData,getClientCount}
