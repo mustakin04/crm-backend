@@ -26,18 +26,27 @@ exports.createApplication = async (req, res) => {
 /* ---------------- GET APPLICATIONS (ROLE BASED) ---------------- */
 exports.getApplications = async (req, res) => {
   try {
-    let filter = {};
+    let applications;
+    let count;
 
-    // 🔐 if NOT admin → only own applications
-    if (req.user.role !== "admin") {
-      filter.createdBy = req.user.id;
+    // 👑 Admin → all applications
+    if (req.user.role === "admin") {
+      applications = await Application.find()
+        .sort({ createdAt: -1 })
+        .populate("createdBy", "name email role");
+
+      count = await Application.countDocuments();
     }
+    // 👤 Normal user → only own applications
+    else {
+      applications = await Application.find({ createdBy: req.user._id })
+        .sort({ createdAt: -1 })
+        .populate("createdBy", "name email role");
 
-    const applications = await Application.find(filter)
-      .sort({ createdAt: -1 })
-      .populate("createdBy", "name email role");
-
-    const count = await Application.countDocuments(filter);
+      count = await Application.countDocuments({
+        createdBy: req.user._id,
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -51,6 +60,7 @@ exports.getApplications = async (req, res) => {
     });
   }
 };
+
 /* ---------------- UPDATE APPLICATION ---------------- */
 exports.updateApplication = async (req, res) => {
   try {
