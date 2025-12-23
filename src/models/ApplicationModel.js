@@ -2,58 +2,111 @@ const mongoose = require("mongoose");
 
 const applicationSchema = new mongoose.Schema(
   {
-    // Basic / General Info
-    transactionId: { type: String },
-    clientName: { type: String },
-    client: { type: String },          // old
-    service: { type: String },
-    title: { type: String },
+    /* ---------------- BASIC INFO ---------------- */
+    account: {
+      type: String,
+      trim: true,
+    },
 
-    // Financial Info
-    totalFee: { type: Number },
-    paid: { type: Number },
-    due: { type: Number },
-    paymentDate: { type: String },
-    paymentMethod: { type: String },
+    entity: {
+      type: String,
+      trim: true,
+    },
 
-    // Apprentice / Business Structure
-    apprenticeGlobal: { type: String },
-    account: { type: String },          // old
-    entity: { type: String },           // old
-    branch: { type: String },
-    ownership: { type: String },        // old
+    branch: {
+      type: String,
+      trim: true,
+    },
 
-    // Application Details
-    type: { type: String },             // old
-    visaType: { type: String },
-    subtype: { type: String },
-    applicantType: { type: String },
-    destination: { type: String },
+    ownership: {
+      type: String,
+      default: "Own",
+      trim: true,
+    },
 
-    stage: { type: String },            // old
-    location: { type: String },         // old
+    /* ---------------- APPLICATION DETAILS ---------------- */
+    client: {
+      type: String,
+      trim: true,
+    },
 
-    university: { type: String },       // old
-    course: { type: String },           // old
+    transaction: {
+      type: String,
+      trim: true,
+    },
 
-    intakeDate: { type: String },       // old
-    dueDate: { type: String },          // old
-    priority: { type: String, default: "Normal" },
+    title: {
+      type: String,
+      trim: true,
+    },
 
-    // Responsible Info
-    responsibleType: { type: String },  // old
-    responsible: { type: String },      // old
-    hasSecondaryResponsible: { type: Boolean, default: false },
+    stage: {
+      type: String,
+      enum: ["Open", "Submitted", "Rejected", "Approved"],
+      default: "Open",
+    },
 
-    // Next Action
-    nextAction: { type: String },
-    nextActionDate: { type: String },
+    type: {
+      type: String,
+      trim: true,
+    },
 
-    // Auto User
+    /* ---------------- EDUCATION ---------------- */
+    location: {
+      type: String,
+      trim: true,
+    },
+
+    university: {
+      type: String,
+      trim: true,
+    },
+
+    course: {
+      type: String,
+      trim: true,
+    },
+
+    intakeDate: {
+      type: String, // frontend থেকে string/date আসে
+    },
+
+    /* ---------------- META ---------------- */
+    priority: {
+      type: String,
+      enum: ["Normal", "High"],
+      default: "Normal",
+    },
+
+    dueDate: {
+      type: String,
+    },
+
+    /* ---------------- RESPONSIBLE ---------------- */
+    responsibleType: {
+      type: String,
+      default: "User",
+    },
+
+    responsible: {
+      type: String,
+      trim: true,
+    },
+    notes:{
+      type:String,
+      trim:true,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    /* ---------------- SYSTEM ---------------- */
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
-    }
+      ref: "User",
+    },
   },
   { timestamps: true }
 );

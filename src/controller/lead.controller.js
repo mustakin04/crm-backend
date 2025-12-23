@@ -6,7 +6,6 @@ exports.createLead = async (req, res) => {
       ...req.body,
       createdBy: req.user._id, // 🔥 User-specific
     });
-
     res.json(lead);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -32,6 +31,92 @@ exports.getMyLeads = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+// ⭐ Get Single Lead
+exports.getSingleLead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const lead = await Lead.findById(id).populate("createdBy", "name email role");
+
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+
+    // Non-admin access check
+    if (req.user.role !== "admin" && lead.createdBy._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to view this lead" });
+    }
+
+    res.json({ lead });
+  } catch (err) {
+    console.error("Get single lead error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+// ⭐ Update Single Lead
+exports.updateLead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // 🔍 Find lead
+    const lead = await Lead.findById(id);
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+
+    // 🔐 Ownership / role check
+    if (
+      req.user.role !== "admin" &&
+      lead.createdBy.toString() !== req.user._id.toString()
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update this lead" });
+    }
+
+    // 🔥 ONLY update non-empty fields (same as code-2)
+    Object.keys(updates).forEach((key) => {
+      if (updates[key] !== "" && updates[key] !== undefined) {
+        lead[key] = updates[key];
+      }
+    });
+
+    await lead.save();
+
+    res.json({
+      message: "Lead updated successfully",
+      lead,
+    });
+  } catch (err) {
+    console.error("Update lead error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ⭐ Delete Single Lead
+exports.deleteLead = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const lead = await Lead.findById(id);
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+
+    // ✅ Only admin can delete
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin can delete leads" });
+    }
+
+    await lead.deleteOne();
+
+    res.json({ message: "Lead deleted successfully" });
+  } catch (err) {
+    console.error("Delete lead error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.getDashboardData = async (req, res) => {
   try {
     const now = new Date();
@@ -94,4 +179,45 @@ exports.getLeadCount = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+// routes/leadSearch.js
+// routes/leadSearch.js
+exports.getLeadSearch = async (req, res) => {
+//   console.log("USER:", req.user);
+// console.log("QUERY:", req.query);
+  try {
+    const { email, phone } = req.query;
+
+    if (!email && !phone) {
+      return res.status(400).json({ message: "Email or phone required" });
+    }
+
+    const orConditions = [];
+
+    if (email) {
+      orConditions.push({ email: email.toLowerCase() });
+    }
+
+    if (phone) {
+      orConditions.push({ phone });
+    }
+
+    let filter = { $or: orConditions };
+
+    // 🔐 Non-admin → only own leads
+    if (req.user.role !== "admin") {
+      filter.createdBy = req.user._id;
+    }
+
+    const leads = await Lead.find(filter)
+      .limit(5)
+      .populate("createdBy", "name email role");
+
+    res.json(leads);
+  } catch (err) {
+    console.error("Lead search error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
 

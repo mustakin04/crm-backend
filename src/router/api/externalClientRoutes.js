@@ -1,13 +1,14 @@
 const express = require("express");
-const { addExternalClient, getExternalClients } = require("../../controller/externalClientController");
+const { addExternalClient, getExternalClients, updateExternalClient, deleteExternalClient } = require("../../controller/externalClientController");
 const protect = require("../../middlewares/auth.middleware");
-const router = express.Router();
+const route = express.Router();
 
 
 // POST → Add External Client
-router.post("/addExternalClient",protect, addExternalClient);
+route.post("/addExternalClient",protect, addExternalClient);
 
 // GET → Get All External Clients
-router.get("/getExternalClients",protect, getExternalClients);
-
-module.exports = router;
+route.get("/getExternalClients",protect, getExternalClients);
+route.put("/updateExternalClient/:id",protect,updateExternalClient)
+route.delete("/deleteExternalClient/:id",protect,deleteExternalClient)
+module.exports = route;

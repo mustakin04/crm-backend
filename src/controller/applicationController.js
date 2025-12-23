@@ -1,8 +1,9 @@
-const Application=require("../models/ApplicationModel")
+const Application = require("../models/ApplicationModel");
 
+/* ---------------- CREATE APPLICATION ---------------- */
 exports.createApplication = async (req, res) => {
   try {
-    const createdBy = req.user.id; // from auth middleware
+    const createdBy = req.user.id;
 
     const application = await Application.create({
       ...req.body,
@@ -21,21 +22,95 @@ exports.createApplication = async (req, res) => {
     });
   }
 };
+
+/* ---------------- GET APPLICATIONS (ROLE BASED) ---------------- */
 exports.getApplications = async (req, res) => {
   try {
-    const applications = await Application.find().sort({ createdAt: -1 });
-    const count= await Application.countDocuments()
+    let filter = {};
+
+    // 🔐 if NOT admin → only own applications
+    if (req.user.role !== "admin") {
+      filter.createdBy = req.user.id;
+    }
+
+    const applications = await Application.find(filter)
+      .sort({ createdAt: -1 })
+      .populate("createdBy", "name email role");
+
+    const count = await Application.countDocuments(filter);
+
     res.status(200).json({
       success: true,
       data: applications,
-      count
+      count,
     });
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
 };
+/* ---------------- UPDATE APPLICATION ---------------- */
+exports.updateApplication = async (req, res) => {
+  try {
+    const { id } = req.params; // /api/v1/application/:id
+    const updates = req.body;
 
+    // 🔍 find application
+    const application = await Application.findById(id);
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
 
+    // 🔐 user-specific check (admin না হলে own application)
+    if (
+      req.user.role !== "admin" &&
+      application.createdBy.toString() !== req.user._id.toString()
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update this application" });
+    }
+
+    // 🔄 update fields
+    Object.keys(updates).forEach((key) => {
+      application[key] = updates[key];
+    });
+
+    await application.save();
+
+    res.json({
+      message: "Application updated successfully",
+      application,
+    });
+  } catch (err) {
+    console.error("Update application error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/* ---------------- DELETE APPLICATION ---------------- */
+exports.deleteApplication = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const application = await Application.findById(id);
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // ✅ Only admin can delete
+    if (req.user.role !== "admin") {
+      return res
+        .status(403)
+        .json({ message: "Only admin can delete applications" });
+    }
+
+    await application.deleteOne();
+
+    res.json({ message: "Application deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

@@ -8,29 +8,49 @@ const LeadSchema = new mongoose.Schema(
       required: true, // keep required to track user
     },
 
-    // New Fields + old ones merged
+    // Lead Owner
     leadOwner: { type: String, trim: true },
+
+    // Personal Info
+    account: { type: String, default: "Atlas Study", trim: true },
+    entity: { type: String, trim: true },
     firstName: { type: String, trim: true },
+    middleName: { type: String, trim: true },
     lastName: { type: String, trim: true },
-    title: { type: String, trim: true },
-    phone: { type: String, trim: true },
-    mobile: { type: String, trim: true },
-    leadSource: { type: String, default: "" },
-    industry: { type: String, trim: true },
-    annualRevenue: { type: String, trim: true },
+    dob: { type: Date },
+    passport: { type: String, trim: true },
+    nationality: { type: String, trim: true },
+    civilStatus: { type: String, trim: true },
+
+    // Contact Info
     email: { type: String, lowercase: true, trim: true },
-    company: { type: String, trim: true },
-    leadStatus: { type: String, default: "New" },
-    noOfEmployees: { type: String, trim: true },
-    rating: { type: String, trim: true },
-    skypeId: { type: String, trim: true },
-    secondaryEmail: { type: String, lowercase: true, trim: true },
-    twitter: { type: String, trim: true },
-    street: { type: String, trim: true },
-    state: { type: String, trim: true },
-    country: { type: String, trim: true },
-    city: { type: String, trim: true },
-    zipCode: { type: String, trim: true },
+    phone: { type: String, trim: true },
+    emergencyContact: { type: String, trim: true },
+    emergencyPhone: { type: String, trim: true },
+    currentLocation: { type: String, trim: true },
+    address: { type: String, trim: true },
+    policeStation: { type: String, trim: true },
+    district: { type: String, trim: true },
+
+    // Responsibility & Services
+    responsibleType: { type: String, trim: true },
+    prefService: { type: String, trim: true },
+    firstServicePref: { type: String, trim: true },
+    secondServicePref: { type: String, trim: true },
+    campaignCode: { type: String, trim: true },
+
+    // Lead Tracking
+    stage: { type: String, trim: true },
+    type: { type: String, trim: true },
+    responsible: { type: String, trim: true },
+    refType: { type: String, trim: true },
+    referredBy: { type: String, trim: true },
+    nextAction: { type: String, trim: true },
+    nextActionDate: { type: Date },
+
+    // Additional
+    agentPromo: { type: String, trim: true },
+    active: { type: String, trim: true },
     description: { type: String, trim: true },
   },
   { timestamps: true }

@@ -39,37 +39,89 @@ const getMyClients = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-// update single client
-const updateClient = async (req, res) => {
+// ⭐ Get Single Client
+const getSingleClient = async (req, res) => {
   try {
-    const { id } = req.params; // /api/v1/client/:id
-    const updates = req.body;
-     console.log(id,"iddd")
-    // খুঁজে নাও ক্লায়েন্ট
+    const { id } = req.params;
+    const client = await Client.findById(id).populate("createdBy", "name email role");
+
+    if (!client) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+
+    // User-specific check
+    if (req.user.role !== "admin" && client.createdBy._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to view this client" });
+    }
+
+    res.json(client);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+// ⭐ Delete Single Client
+const deleteClient = async (req, res) => {
+  try {
+    const { id } = req.params;
+
     const client = await Client.findById(id);
     if (!client) {
       return res.status(404).json({ message: "Client not found" });
     }
 
-    // User-specific check (admin না হলে)
-    if (req.user.role !== "admin" && client.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to update this client" });
+    // ✅ Only admin can delete
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin can delete clients" });
     }
 
-    // Update
+    await client.deleteOne();
+
+    res.json({ message: "Client deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// update single client
+const updateClient = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const client = await Client.findById(id);
+    if (!client) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+
+    // Ownership check
+    if (
+      req.user.role !== "admin" &&
+      client.createdBy.toString() !== req.user._id.toString()
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update this client" });
+    }
+
+    // 🔥 ONLY update non-empty fields
     Object.keys(updates).forEach((key) => {
-      client[key] = updates[key];
+      if (updates[key] !== "" && updates[key] !== undefined) {
+        client[key] = updates[key];
+      }
     });
 
     await client.save();
 
-    res.json({ message: "Client updated successfully", client });
+    res.json({
+      message: "Client updated successfully",
+      client,
+    });
   } catch (err) {
     console.error("Update client error:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 // ⭐ Get My Clients (Dashboard Data)
 const getDashboardData = async (req, res) => {
   try {
@@ -132,5 +184,23 @@ const getClientCount = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+const checkClientExists = async (req, res) => {
+  const { email, phone } = req.query;
+console.log("user",req.query)
+  const query = {};
+  if (email) query.email = email;
+  if (phone) query.phone = phone;
 
-module.exports={createClient,getMyClients,updateClient,getDashboardData,getClientCount}
+  const client = await Client.findOne(query);
+
+  if (client) {
+    return res.json({
+      exists: true,
+      client,
+    });
+  }
+
+  res.json({ exists: false });
+};
+module.exports={createClient,getMyClients,getSingleClient,deleteClient,
+                updateClient,getDashboardData,getClientCount,checkClientExists}
