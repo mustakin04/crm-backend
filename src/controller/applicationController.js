@@ -84,7 +84,8 @@ exports.updateApplication = async (req, res) => {
 
     // 🔄 update fields
     Object.keys(updates).forEach((key) => {
-      application[key] = updates[key];
+      if (updates[key] !== "" && updates[key] !== undefined){
+      application[key] = updates[key];}
     });
 
     await application.save();
