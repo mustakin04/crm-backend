@@ -11,7 +11,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://sensational-kheer-8f473b.netlify.app/",
+      "https://sensational-kheer-8f473b.netlify.app",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
