@@ -3,11 +3,9 @@ const Application = require("../models/ApplicationModel");
 /* ---------------- CREATE APPLICATION ---------------- */
 exports.createApplication = async (req, res) => {
   try {
-    const createdBy = req.user.id;
-
     const application = await Application.create({
       ...req.body,
-      createdBy,
+      createdBy: req.user._id, // 🔥 SAME AS createLead
     });
 
     res.status(201).json({
@@ -16,6 +14,7 @@ exports.createApplication = async (req, res) => {
       data: application,
     });
   } catch (err) {
+    console.error("Create application error:", err);
     res.status(500).json({
       success: false,
       message: err.message,

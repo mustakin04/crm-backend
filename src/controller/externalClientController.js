@@ -22,27 +22,42 @@ exports.addExternalClient = async (req, res) => {
 exports.getExternalClients = async (req, res) => {
   try {
     let clients;
+    let count;
 
-    // Admin → all clients
+    // 👑 Admin → all external clients
     if (req.user.role === "admin") {
       clients = await ExternalClient.find()
-        .populate("createdBy", "name email role")
-        .sort({ createdAt: -1 });
-    } 
-    // Normal user → only own clients
+        .sort({ createdAt: -1 })
+        .populate("createdBy", "name email role");
+
+      count = await ExternalClient.countDocuments();
+    }
+    // 👤 Normal user → only own external clients
     else {
       clients = await ExternalClient.find({
         createdBy: req.user._id,
       })
-        .populate("createdBy", "name email role")
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .populate("createdBy", "name email role");
+
+      count = await ExternalClient.countDocuments({
+        createdBy: req.user._id,
+      });
     }
 
-    res.json(clients);
+    res.status(200).json({
+      success: true,
+      data: clients,
+      count,
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
+
 
 /* ==============================
    ⭐ Get Single External Client
