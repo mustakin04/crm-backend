@@ -1,0 +1,39 @@
+name: Develop
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          eval $(ssh-agent -s)
+          echo "$PROD_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          echo "$PROD_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/id_ed25519
+          ls -al
+          ls -al ~/.ssh
+
+        shell: bash
+        env:
+          PROD_SSH_PRIVATE_KEY: ${{secrets.PROD_SSH_PRIVATE_KEY}}
+          PROD_SSH_KNOWN_HOSTS: ${{secrets.PROD_SSH_KNOWN_HOSTS}}
+
+      - name: Install Global PM2
+        run: npm install -g pm2
+
+      - name: Run NPM
+        run: npm install
+
+      - name: Git stash
+        run: git stash -u
+
+      - name: Deploy
+        run: npx pm2 deploy production
+        
