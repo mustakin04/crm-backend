@@ -14,7 +14,7 @@ module.exports = {
         '--max-old-space-size=512',
       ],
       env_production: {
-        PORT: 64690, // https://api.iatlasstudy.com
+        PORT: 64690, // https://crm-api.iatlasstudy.com
         PRODUCTION: true,
         NODE_ENV: 'production',
       },
