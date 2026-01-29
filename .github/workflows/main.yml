@@ -13,10 +13,10 @@ jobs:
         run: |
           mkdir -p ~/.ssh/
           eval $(ssh-agent -s)
-          echo "$PROD_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          echo "$PROD_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           echo "$PROD_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 700 ~/.ssh
-          chmod 600 ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_ed25519
           ls -al
           ls -al ~/.ssh
 
