@@ -11,7 +11,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://crm.iatlasstudy.com/",//cPanel sub-domain
+      "https://crm.iatlasstudy.com/",//cPanel sub-domain  ok
       "https://sensational-kheer-8f473b.netlify.app",
     ],
     credentials: true,
