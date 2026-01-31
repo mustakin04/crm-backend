@@ -6,32 +6,58 @@ const route = require("./src/router/index");
 
 const app = express();
 
-// Middleware
+/* ===============================
+   CORS CONFIG (NODE 24 SAFE)
+================================ */
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://crm.iatlasstudy.com",
+  "https://sensational-kheer-8f473b.netlify.app",
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://crm.iatlasstudy.com/",//cPanel sub-domain  ok
-      "https://sensational-kheer-8f473b.netlify.app",
-    ],
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+/* ===============================
+   BODY PARSER
+================================ */
 app.use(express.json());
 
-// Connect Database
+/* ===============================
+   DATABASE
+================================ */
 connectDB();
 
-// Use Routes
+/* ===============================
+   ROUTES
+================================ */
 app.use(route);
 
-// Test Route
+/* ===============================
+   TEST
+================================ */
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// Server Start
-const PORT = 3000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+/* ===============================
+   SERVER
+================================ */
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
