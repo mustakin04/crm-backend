@@ -181,11 +181,12 @@ exports.getDashboardData = async (req, res) => {
     const { dateFilter } = req.query;
 
     let startDate;
-    let endDate = new Date(); //role base
+    let endDate = new Date(); // default end date = now
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // 🗓 Date filter logic
     switch (dateFilter) {
       case "today":
         startDate = today;
@@ -215,18 +216,29 @@ exports.getDashboardData = async (req, res) => {
         break;
     }
 
-    const leads = await Lead.find({
+    // 🔐 Role-based filter
+    const filter = {
       createdAt: {
         $gte: startDate,
         $lte: endDate,
       },
-    }).sort({ createdAt: -1 });
+    };
+
+    if (req.user.role !== "admin") {
+      filter.createdBy = req.user._id; // Non-admin → only own leads
+    }
+
+    const leads = await Lead.find(filter)
+      .sort({ createdAt: -1 })
+      .populate("createdBy", "name email role"); // optional: show creator info
 
     res.status(200).json({ leads });
   } catch (error) {
+    console.error("Dashboard error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 exports.getLeadCount = async (req, res) => {
   try {
