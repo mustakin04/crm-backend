@@ -181,7 +181,7 @@ exports.getDashboardData = async (req, res) => {
     const { dateFilter } = req.query;
 
     let startDate;
-    let endDate = new Date();
+    let endDate = new Date(); //role base
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
