@@ -24,7 +24,6 @@ const login = async (req, res) => {
   if (!user || !(await user.matchPassword(password))) {
     return res.status(400).json({ message: "Invalid credentials" });
   }
-
   res.json({
     user,
     token: generateToken(user._id),
