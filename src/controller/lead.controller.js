@@ -24,20 +24,65 @@ exports.importLeads = async (req, res) => {
         leads.push(lead);
       })
       .on("end", async () => {
-        if (leads.length === 0) {
-          return res
-            .status(400)
-            .json({ message: "No valid leads found in CSV" });
+        try {
+          if (leads.length === 0) {
+            return res
+              .status(400)
+              .json({ message: "No valid leads found in CSV" });
+          }
+
+          // -----------------------------
+          // Duplicate check logic start
+          // -----------------------------
+
+          const normalizedLeads = leads.map((lead) => ({
+            ...lead,
+            email: lead.email?.trim().toLowerCase(),
+            phone: lead.phone?.replace(/\D/g, "").trim(),
+          }));
+
+          // Collect all emails & phones from CSV
+          const emails = normalizedLeads.map((l) => l.email).filter(Boolean);
+          const phones = normalizedLeads.map((l) => l.phone).filter(Boolean);
+
+          // Find existing leads in DB
+          const existingLeads = await Lead.find({
+            $or: [{ email: { $in: emails } }, { phone: { $in: phones } }],
+          }).select("email phone");
+
+          const existingEmails = new Set(existingLeads.map((l) => l.email));
+          const existingPhones = new Set(existingLeads.map((l) => l.phone));
+
+          // Filter out duplicates
+          const filteredLeads = normalizedLeads.filter(
+            (lead) =>
+              !existingEmails.has(lead.email) &&
+              !existingPhones.has(lead.phone)
+          );
+
+          if (filteredLeads.length === 0) {
+            return res.status(400).json({
+              message: "All leads already exist (duplicate)",
+            });
+          }
+
+          // Insert only non-duplicate leads
+          const inserted = await Lead.insertMany(filteredLeads);
+
+          res.status(200).json({
+            message: "CSV imported successfully",
+            inserted: inserted.length,
+            skipped: normalizedLeads.length - filteredLeads.length,
+            data: inserted,
+          });
+
+          // -----------------------------
+          // Duplicate check logic end
+          // -----------------------------
+        } catch (error) {
+          console.error("Import error:", error);
+          res.status(500).json({ message: error.message });
         }
-
-        // Insert all leads in one go
-        const inserted = await Lead.insertMany(leads);
-
-        res.status(200).json({
-          message: "CSV imported successfully",
-          totalInserted: inserted.length,
-          data: inserted,
-        });
       })
       .on("error", (err) => {
         console.error("CSV parsing error:", err);
