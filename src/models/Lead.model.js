@@ -23,8 +23,8 @@ const LeadSchema = new mongoose.Schema(
     civilStatus: { type: String, trim: true },
 
     // Contact Info
-    email: { type: String, lowercase: true, trim: true },
-    phone: { type: String, trim: true },
+    email: { type: String, unique: true, lowercase: true, trim: true },
+    phone: { type: String, unique: true, trim: true },
     emergencyContact: { type: String, trim: true },
     emergencyPhone: { type: String, trim: true },
     currentLocation: { type: String, trim: true },
