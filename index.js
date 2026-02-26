@@ -43,7 +43,7 @@ app.use(express.json());
 connectDB();
 
   
-app.use(route);
+app.use(route);  // ok
 
 
 app.get("/", (req, res) => {
