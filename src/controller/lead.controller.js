@@ -98,32 +98,34 @@ exports.importLeads = async (req, res) => {
 
 exports.createLead = async (req, res) => {
   try {
-    // 🔹 normalize input
     const email = req.body.email?.trim().toLowerCase();
-    const phone = req.body.phone?.replace(/\D/g, "").trim();
 
-    // ❗ empty both block
+    const rawPhone = req.body.phone || "";
+    let phone = rawPhone.replace(/\D/g, "");
+
+    if (phone.startsWith("880")) {
+      phone = "0" + phone.slice(3);
+    }
+
     if (!phone) {
       return res.status(400).json({
-        message: " phone required",
+        message: "Phone required",
       });
     }
 
-    // 🔍 duplicate check
     const existingLead = await Lead.findOne({
       $or: [
+        { phone },
         email ? { email } : null,
-        phone ? { phone } : null,
       ].filter(Boolean),
     });
 
     if (existingLead) {
       return res.status(409).json({
-        message: "Lead already exists with same email or phone",
+        message: "Lead already exists with same phone or email",
       });
     }
 
-    // ✅ create lead
     const lead = await Lead.create({
       ...req.body,
       email,
@@ -137,7 +139,15 @@ exports.createLead = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Create lead error:", err);
+    console.error(err);
+
+    // duplicate index error catch
+    if (err.code === 11000) {
+      return res.status(409).json({
+        message: "Duplicate phone or email not allowed",
+      });
+    }
+
     res.status(500).json({ message: err.message });
   }
 };
