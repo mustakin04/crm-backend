@@ -98,12 +98,46 @@ exports.importLeads = async (req, res) => {
 
 exports.createLead = async (req, res) => {
   try {
+    // 🔹 normalize input
+    const email = req.body.email?.trim().toLowerCase();
+    const phone = req.body.phone?.replace(/\D/g, "").trim();
+
+    // ❗ empty both block
+    if (!phone) {
+      return res.status(400).json({
+        message: " phone required",
+      });
+    }
+
+    // 🔍 duplicate check
+    const existingLead = await Lead.findOne({
+      $or: [
+        email ? { email } : null,
+        phone ? { phone } : null,
+      ].filter(Boolean),
+    });
+
+    if (existingLead) {
+      return res.status(409).json({
+        message: "Lead already exists with same email or phone",
+      });
+    }
+
+    // ✅ create lead
     const lead = await Lead.create({
       ...req.body,
-      createdBy: req.user._id, // 🔥 User-specific
+      email,
+      phone,
+      createdBy: req.user._id,
     });
-    res.json(lead);
+
+    res.status(201).json({
+      message: "Lead created successfully",
+      lead,
+    });
+
   } catch (err) {
+    console.error("Create lead error:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -284,7 +318,6 @@ exports.getDashboardData = async (req, res) => {
   }
 };
 
-
 exports.getLeadCount = async (req, res) => {
   try {
     let count;
@@ -464,6 +497,25 @@ if (nextActionDate) {
     res.status(200).json({ leads });
   } catch (err) {
     console.error("Lead filter error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};     
+// controllers/lead.controller.js
+exports.getLeadStages = async (req, res) => {
+  try {
+    let filter = {};
+
+    // Non-admin → sudhu nijer leads
+    if (req.user.role !== "admin") {
+      filter.createdBy = req.user._id;
+    }
+
+    // MongoDB distinct
+    const stages = await Lead.distinct("stage", filter);
+
+    res.status(200).json({ stages });
+  } catch (err) {
+    console.error("Get lead stages error:", err);
     res.status(500).json({ message: err.message });
   }
 };
