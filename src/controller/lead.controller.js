@@ -113,6 +113,7 @@ exports.createLead = async (req, res) => {
       });
     }
 
+    // 🔍 Duplicate check
     const existingLead = await Lead.findOne({
       $or: [
         { phone },
@@ -126,10 +127,17 @@ exports.createLead = async (req, res) => {
       });
     }
 
+    // 🔢 Generate leadNumber
+    const lastLead = await Lead.findOne().sort({ leadNumber: -1 });
+
+    const newLeadNumber = lastLead ? lastLead.leadNumber + 1 : 1;
+
+    // 🆕 Create Lead
     const lead = await Lead.create({
       ...req.body,
       email,
       phone,
+      leadNumber: newLeadNumber, // ✅ added
       createdBy: req.user._id,
     });
 
@@ -141,10 +149,9 @@ exports.createLead = async (req, res) => {
   } catch (err) {
     console.error(err);
 
-    // duplicate index error catch
     if (err.code === 11000) {
       return res.status(409).json({
-        message: "Duplicate phone or email not allowed",
+        message: "Duplicate phone, email or lead number not allowed",
       });
     }
 
@@ -526,6 +533,110 @@ exports.getLeadStages = async (req, res) => {
     res.status(200).json({ stages });
   } catch (err) {
     console.error("Get lead stages error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ⭐ Add Call Log
+exports.addCallLog = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 🔍 Find lead
+    const lead = await Lead.findById(id);
+
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+
+    // 🔐 Ownership / role check
+    if (
+      req.user.role !== "admin" &&
+      lead.createdBy.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        message: "Not authorized to add call log to this lead",
+      });
+    }
+
+    // 📞 Add call log
+    lead.callLogs.push({
+      date: new Date(),
+      user: req.user.name,
+    });
+
+    await lead.save();
+
+    res.status(200).json({
+      message: "Call log added successfully",
+      lead,
+    });
+  } catch (err) {
+    console.error("Add call log error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ⭐ Get Call Stats
+exports.getCallStats = async (req, res) => {
+  try {
+    const { fromDate, toDate } = req.query;
+
+    // ❗ validation
+    if (!fromDate || !toDate) {
+      return res.status(400).json({
+        message: "fromDate and toDate are required",
+      });
+    }
+
+    const startDate = new Date(fromDate);
+    const endDate = new Date(toDate);
+    endDate.setHours(23, 59, 59, 999); // full day include
+
+    // 🔐 Role-based filter
+    let matchFilter = {
+      "callLogs.date": {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    };
+
+    if (req.user.role !== "admin") {
+      matchFilter.createdBy = req.user._id;
+    }
+
+    const result = await Lead.aggregate([
+      { $unwind: "$callLogs" },
+
+      {
+        $match: matchFilter,
+      },
+
+      {
+        $group: {
+          _id: {
+            date: {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$callLogs.date",
+              },
+            },
+          },
+          totalCalls: { $sum: 1 },
+        },
+      },
+
+      {
+        $sort: { "_id.date": -1 },
+      },
+    ]);
+
+    res.status(200).json({
+      message: "Call stats fetched successfully",
+      data: result,
+    });
+  } catch (err) {
+    console.error("Call stats error:", err);
     res.status(500).json({ message: err.message });
   }
 };

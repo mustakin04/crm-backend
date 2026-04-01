@@ -1,5 +1,6 @@
 const express=require("express")
-const { createLead, getMyLeads, getDashboardData, getLeadCount, getSingleLead, updateLead, deleteLead, getLeadSearch, importLeads, filterLeads, getLeadStages } = require("../../controller/lead.controller")
+const { createLead, getMyLeads, getDashboardData, getLeadCount, getSingleLead, updateLead, deleteLead,
+     getLeadSearch, importLeads, filterLeads, getLeadStages, addCallLog, getCallStats } = require("../../controller/lead.controller")
 const protect = require("../../middlewares/auth.middleware")
 const upload = require("../../middlewares/upload")
 
@@ -16,4 +17,6 @@ route.delete("/deleteLead/:id",protect,deleteLead)
 route.get("/similar",protect,getLeadSearch)
 route.get("/filter",protect,filterLeads)
 route.get("/stage",protect,getLeadStages)
+route.patch("/add-call/:id", protect,addCallLog);
+route.get("/call-stats", protect, getCallStats);
 module.exports=route 

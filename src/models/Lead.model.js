@@ -10,8 +10,15 @@ const LeadSchema = new mongoose.Schema(
 
     // Lead Owner
     leadOwner: { type: String, trim: true },
+    callLogs: [
+      {
+        date: { type: Date, default: Date.now },
+        user: String,
+      },
+    ],
 
     // Personal Info
+    leadNumber: { type: Number },
     account: { type: String, default: "Atlas Study", trim: true },
     entity: { type: String, trim: true },
     firstName: { type: String, trim: true },
@@ -53,7 +60,7 @@ const LeadSchema = new mongoose.Schema(
     active: { type: String, trim: true },
     description: { type: String, trim: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Lead", LeadSchema);
