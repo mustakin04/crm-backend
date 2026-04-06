@@ -15,10 +15,9 @@ exports.importLeads = async (req, res) => {
     bufferStream
       .pipe(csv())
       .on("data", (row) => {
-        // CSV row → Lead object
         const lead = mapRowToLead(row, req.user._id);
 
-        // skip empty row: email or phone missing
+        // Skip rows with no email & phone
         if (!lead.email && !lead.phone) return;
 
         leads.push(lead);
@@ -34,7 +33,7 @@ exports.importLeads = async (req, res) => {
           // -----------------------------
           // Duplicate check logic start
           // -----------------------------
-
+          // Normalize emails and phones for comparison
           const normalizedLeads = leads.map((lead) => ({
             ...lead,
             email: lead.email?.trim().toLowerCase(),
@@ -45,7 +44,7 @@ exports.importLeads = async (req, res) => {
           const emails = normalizedLeads.map((l) => l.email).filter(Boolean);
           const phones = normalizedLeads.map((l) => l.phone).filter(Boolean);
 
-          // Find existing leads in DB
+          // Find existing leads in DB with same email OR phone
           const existingLeads = await Lead.find({
             $or: [{ email: { $in: emails } }, { phone: { $in: phones } }],
           }).select("email phone");
@@ -53,16 +52,21 @@ exports.importLeads = async (req, res) => {
           const existingEmails = new Set(existingLeads.map((l) => l.email));
           const existingPhones = new Set(existingLeads.map((l) => l.phone));
 
-          // Filter out duplicates
+          // -----------------------------
+          // Filter: Keep only leads that are NOT duplicate
+          // -----------------------------
           const filteredLeads = normalizedLeads.filter(
             (lead) =>
-              !existingEmails.has(lead.email) &&
-              !existingPhones.has(lead.phone)
+              // Keep if email is empty or not in DB
+              (!lead.email || !existingEmails.has(lead.email)) &&
+              // Keep if phone is empty or not in DB
+              (!lead.phone || !existingPhones.has(lead.phone))
           );
 
           if (filteredLeads.length === 0) {
             return res.status(400).json({
-              message: "All leads already exist (duplicate)",
+              message:
+                "All leads already exist (duplicate). No new leads to insert.",
             });
           }
 

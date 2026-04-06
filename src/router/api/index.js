@@ -1,6 +1,6 @@
 const express = require("express");
 const route = express.Router();
-
+const attendance= require("./attendanceRoutes.js")
 const lead = require("./lead");
 const authRoute = require("./authentication");
 const client =require("./client")
@@ -13,4 +13,5 @@ route.use("/client",client)
 route.use("/externalClient",externalClinet)
 route.use("/transaction",transaction)
 route.use("/application",application)
+route.use("/attendance",attendance)
 module.exports = route;
