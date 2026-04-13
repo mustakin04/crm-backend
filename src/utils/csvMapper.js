@@ -14,6 +14,8 @@ const mapRowToLead = (row, userId) => {
     const normalized = normalizeKey(key);
 
     // Personal Info
+    if (normalized === "leadnumber") mapped.leadNumber = Number(row[key]);
+    if (normalized === "firstname") mapped.firstName = row[key];
     if (normalized === "firstname") mapped.firstName = row[key];
     if (normalized === "middlename") mapped.middleName = row[key];
     if (normalized === "lastname") mapped.lastName = row[key];

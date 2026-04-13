@@ -10,8 +10,7 @@ exports.importLeads = async (req, res) => {
 
     const leads = [];
     const bufferStream = new stream.PassThrough();
-    bufferStream.end(req.file.buffer);
-
+    bufferStream.end(req.file.buffer);     
     bufferStream
       .pipe(csv())
       .on("data", (row) => {
@@ -33,7 +32,7 @@ exports.importLeads = async (req, res) => {
           // -----------------------------
           // Duplicate check logic start
           // -----------------------------
-          // Normalize emails and phones for comparison
+          // Normalize emails and phones for comparison  
           const normalizedLeads = leads.map((lead) => ({
             ...lead,
             email: lead.email?.trim().toLowerCase(),
@@ -98,7 +97,7 @@ exports.importLeads = async (req, res) => {
     console.error("Import error:", error);
     res.status(500).json({ message: error.message });
   }
-};
+};      
 
 exports.createLead = async (req, res) => {
   try {
