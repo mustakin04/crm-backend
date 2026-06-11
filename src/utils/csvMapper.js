@@ -12,9 +12,8 @@ const mapRowToLead = (row, userId) => {
 
   for (let key in row) {
     const normalized = normalizeKey(key);
-
     // Personal Info
-    if (normalized === "leadnumber") mapped.leadNumber = Number(row[key]);
+    // if (normalized === "leadnumber") mapped.leadNumber = Number(row[key]);
     if (normalized === "firstname") mapped.firstName = row[key];
     if (normalized === "firstname") mapped.firstName = row[key];
     if (normalized === "middlename") mapped.middleName = row[key];
@@ -23,6 +22,22 @@ const mapRowToLead = (row, userId) => {
     if (normalized === "passport") mapped.passport = row[key];
     if (normalized === "nationality") mapped.nationality = row[key];
     if (normalized === "civilstatus") mapped.civilStatus = row[key];
+
+    // Education Info
+if (normalized === "highesteducation")
+  mapped.highesteducation = row[key];
+
+if (
+  normalized === "interestedsubject" ||
+  normalized === "interestate"
+)
+  mapped.interestate = row[key];
+
+if (normalized === "program")
+  mapped.program = row[key];
+
+if (normalized === "age")
+  mapped.age = row[key];
 
     // Contact Info
     if (normalized === "email") mapped.email = row[key];
@@ -59,6 +74,10 @@ const mapRowToLead = (row, userId) => {
     // Optional: Lead Owner & Account
     if (normalized === "leadowner") mapped.leadOwner = row[key];
     if (normalized === "account") mapped.account = row[key];
+
+    // Education Info
+    if (normalized === "highesteducation") mapped.highestEducation = row[key];
+    if (normalized === "interestedsubject") mapped.interestedSubject = row[key];
   }
 
   // Always required

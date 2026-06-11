@@ -17,13 +17,13 @@ const LeadSchema = new mongoose.Schema(
       },
     ],
 
-    // Personal Info
+     // Personal Info
     leadNumber: { type: Number },
     account: { type: String, default: "Atlas Study", trim: true },
     entity: { type: String, trim: true },
     firstName: { type: String, trim: true },
     middleName: { type: String, trim: true },
-    lastName: { type: String, trim: true },
+    highesteducation: { type: String, trim: true },
     dob: { type: Date },
     passport: { type: String, trim: true },
     nationality: { type: String, trim: true },
@@ -32,11 +32,11 @@ const LeadSchema = new mongoose.Schema(
     // Contact Info
     email: { type: String, unique: true, lowercase: true, trim: true },
     phone: { type: String, unique: true, trim: true },
-    emergencyContact: { type: String, trim: true },
-    emergencyPhone: { type: String, trim: true },
+    interestate: { type: String, trim: true },
+    age: { type: String, trim: true },
     currentLocation: { type: String, trim: true },
     address: { type: String, trim: true },
-    policeStation: { type: String, trim: true },
+    program: { type: String, trim: true },
     district: { type: String, trim: true },
 
     // Responsibility & Services

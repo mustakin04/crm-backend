@@ -164,19 +164,31 @@ exports.createLead = async (req, res) => {
 
 exports.getMyLeads = async (req, res) => {
   try {
-    let leads;
+    const filter =
+      req.user.role === "admin"
+        ? {}
+        : { createdBy: req.user._id };
 
-    // Admin or normal user er jonno populate kore name & role
-    if (req.user.role === "admin") {
-      leads = await Lead.find().populate("createdBy", "name email role"); // sob lead
-    } else {
-      leads = await Lead.find({ createdBy: req.user._id }).populate(
-        "createdBy",
-        "name email role",
-      ); // sudhu nijer lead
-    }
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    res.json(leads);
+    const leads = await Lead.find(filter)
+      .select("firstName lastName email phone leadNumber stage createdAt")
+      .sort({ leadNumber: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("createdBy", "name email role")
+      .lean();
+
+    const total = await Lead.countDocuments(filter);
+
+    res.json({
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      data: leads,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -328,7 +340,7 @@ exports.getDashboardData = async (req, res) => {
     }
 
     const leads = await Lead.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ leadNumber: -1 }) 
       .populate("createdBy", "name email role"); // optional: show creator info
 
     res.status(200).json({ leads });
@@ -383,7 +395,8 @@ exports.getLeadSearch = async (req, res) => {
     }
 
     const leads = await Lead.find(filter)
-      .limit(5)
+       .sort({ leadNumber: -1 })
+      .limit(10)
       .populate("createdBy", "name email role");
 
     res.json(leads);
@@ -406,11 +419,11 @@ exports.filterLeads = async (req, res) => {
       nextActionType,
       nextActionDate, // ⭐ single date
     } = req.query;
-   console.log("Filter Query:", req.query);
+  //  console.log("Filter Query:", req.query);
  
     let filter = {};
 
-   let sortBy = { createdAt: -1 }; // default
+   let sortBy = { leadNumber: -1 }; // default
     // 🔐 Role based access
     if (req.user.role !== "admin") {
       filter.createdBy = req.user._id;
@@ -445,7 +458,7 @@ if (nextActionDate) {
     $gte: new Date(`${nextActionDate}T00:00:00.000Z`),
     $lte: new Date(`${nextActionDate}T23:59:59.999Z`),
   };
-    console.log("MongoDB এ পাঠানো filter:", JSON.stringify(filter, null, 2));
+    //console.log("MongoDB এ পাঠানো filter:", JSON.stringify(filter, null, 2));
 }
 
 
