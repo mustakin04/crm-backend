@@ -7,30 +7,40 @@ const route = require("./src/router/index");
 const app = express();
 
 /* ===============================
-   CORS CONFIG (NODE 24 SAFE)
+   ALLOWED ORIGINS
 ================================ */
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://crm.iatlasstudy.com",  //frontedn
+  "https://crm.iatlasstudy.com",
   "https://sensational-kheer-8f473b.netlify.app",
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
+/* ===============================
+   CORS CONFIG (FIXED)
+================================ */
+const corsOptions = {
+  origin: function (origin, callback) {
+    // allow server-to-server or curl/postman
+    if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE","PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(null, false); // IMPORTANT: no crash
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+
+/* ===============================
+   HANDLE PRE-FLIGHT REQUESTS
+================================ */
+app.options("*", cors(corsOptions));
 
 /* ===============================
    BODY PARSER
@@ -38,13 +48,14 @@ app.use(
 app.use(express.json());
 
 /* ===============================
-   DATABASE
+   DB
 ================================ */
 connectDB();
 
-  
-app.use(route);  // ok
-
+/* ===============================
+   ROUTES
+================================ */
+app.use(route);
 
 app.get("/", (req, res) => {
   res.send("API is running...");
