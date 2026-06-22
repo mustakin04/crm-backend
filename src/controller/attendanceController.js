@@ -1,6 +1,7 @@
 const Attendance = require("../models/Attendance");
 // const User = require("../models/User"); // 👈 লাগবে admin part এর জন্য
 const User= require("../models/User.model")
+const moment = require("moment");
 const {
   getTodayDate,
   getCurrentTime,
@@ -12,6 +13,19 @@ const {
 // ✅ Check-in (User only)
 exports.checkIn = async (req, res) => {
   try {
+    const OFFICE_IP = "103.17.37.154";
+
+const userIp = req.headers["x-client-ip"];
+
+console.log("Client IP:", userIp);
+console.log("Headers:", req.headers);
+
+if (userIp !== OFFICE_IP) {
+  return res.status(403).json({
+    message: "You must be connected to office WiFi",
+  });
+}
+
     if (req.user.role !== "user") {
       return res.status(403).json({
         message: "Only employees can check in",
@@ -189,55 +203,112 @@ exports.getDashboardStats = async (req, res) => {
 };
 
 // GET /api/attendance/monthly-report?month=2026-04
+
+
 exports.getMonthlyReport = async (req, res) => {
   try {
     const { month } = req.query;
 
-    const [year, mon] = month.split("-");
-    const start = `${year}-${mon}-01`;
-    const end = `${year}-${mon}-31`;
+    if (!month) {
+      return res.status(400).json({
+        message: "Month is required",
+      });
+    }
 
+    const [year, mon] = month.split("-");
+
+    const start = moment(
+      `${year}-${mon}-01`,
+      "YYYY-MM-DD"
+    );
+
+    const today = moment();
+
+    const isCurrentMonth =
+      today.format("YYYY-MM") === month;
+
+    // 👉 end date fix (current month vs past month)
+    const end = isCurrentMonth
+      ? today
+      : start.clone().endOf("month");
+
+    // All employees
+    const users = await User.find({
+      role: "user",
+    }).select("name");
+
+    // Attendance data
     const data = await Attendance.find({
-      date: { $gte: start, $lte: end },
+      date: {
+        $gte: start.format("YYYY-MM-DD"),
+        $lte: end.format("YYYY-MM-DD"),
+      },
     }).populate("userId", "name");
+
+    // 👉 Working days (Friday off + dynamic date range)
+    let workingDays = 0;
+
+    for (
+      let d = start.clone();
+      d.isSameOrBefore(end, "day");
+      d.add(1, "day")
+    ) {
+      // Friday = 5
+      if (d.day() !== 5) {
+        workingDays++;
+      }
+    }
 
     const report = {};
 
-    data.forEach((a) => {
-      const name = a.userId.name;
-
-      if (!report[name]) {
-        report[name] = {
-          present: 0,
-          late: 0,
-          absent: 0,
-          totalDays: 0,
-        };
-      }
-
-      report[name].totalDays++;
-
-      if (a.status === "on-time") report[name].present++;
-      if (a.status === "late") report[name].late++;
+    // initialize all users
+    users.forEach((user) => {
+      report[user.name] = {
+        present: 0,
+        late: 0,
+        absent: 0,
+      };
     });
 
-    // 🔥 Calculate attendance rate
+    // count attendance
+    data.forEach((a) => {
+      const name = a.userId?.name;
+
+      if (!name || !report[name]) return;
+
+      if (a.status === "on-time") {
+        report[name].present++;
+      }
+
+      if (a.status === "late") {
+        report[name].late++;
+      }
+    });
+
+    // final calculation
     Object.keys(report).forEach((name) => {
-      const user = report[name];
+      const attended =
+        report[name].present +
+        report[name].late;
 
-      const attendedDays = user.present + user.late;
+      report[name].absent = Math.max(
+        0,
+        workingDays - attended
+      );
 
-      user.attendanceRate = (
-        (attendedDays / user.totalDays) *
-        100
-      ).toFixed(2) + "%";
-
-      // optional: clean remove totalDays if you don't want
-      delete user.totalDays;
+      report[name].attendanceRate =
+        workingDays === 0
+          ? "0%"
+          : (
+              (attended / workingDays) *
+              100
+            ).toFixed(2) + "%";
     });
 
     res.json(report);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };
