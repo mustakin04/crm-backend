@@ -16,10 +16,7 @@ exports.checkIn = async (req, res) => {
     const OFFICE_IP = "103.17.37.154";
 
 const userIp = req.headers["x-client-ip"];
-
-console.log("Client IP:", userIp);
-console.log("Headers:", req.headers);
-
+ 
 if (userIp !== OFFICE_IP) {
   return res.status(403).json({
     message: "You must be connected to office WiFi",
@@ -110,7 +107,7 @@ exports.checkOut = async (req, res) => {
 exports.getMyAttendance = async (req, res) => {
   try {
     const userId = req.user._id;
-
+    console.log(req.user,"oiiiiii")
     // Current month (YYYY-MM)
     const currentMonth = moment().format("YYYY-MM");
 
@@ -124,6 +121,7 @@ exports.getMyAttendance = async (req, res) => {
 
     res.json(data);
   } catch (err) {
+    console.log(err)
     res.status(500).json({ message: err.message });
   }
 };
@@ -139,31 +137,44 @@ exports.getAllAttendance = async (req, res) => {
 
     let filter = {};
 
-    // ✅ Date / Month filter
-    if (date) {
+    // যদি কোনো filter না আসে, তাহলে আজকের attendance দেখাও
+    if (!date && !month && !userId && !userName && !status) {
+      filter.date = getTodayDate();
+    }
+    // Date filter
+    else if (date) {
       filter.date = date;
-    } else if (month) {
-      const [year, mon] = month.split("-");
-      const startDate = `${year}-${mon}-01`;
-      const endDate = `${year}-${mon}-31`;
-      filter.date = { $gte: startDate, $lte: endDate };
+    }
+    // Month filter
+    else if (month) {
+      const startDate = moment(month).startOf("month").format("YYYY-MM-DD");
+      const endDate = moment(month).endOf("month").format("YYYY-MM-DD");
+
+      filter.date = {
+        $gte: startDate,
+        $lte: endDate,
+      };
     }
 
-    // ✅ Status
-    if (status) filter.status = status;
+    // Status filter
+    if (status) {
+      filter.status = status;
+    }
 
-    // ✅ UserId direct filter
-    if (userId) filter.userId = userId;
+    // User ID filter
+    if (userId) {
+      filter.userId = userId;
+    }
 
-    // 🔥 ✅ FIX: userName filter (IMPORTANT)
+    // User Name filter
     if (userName) {
       const users = await User.find({
         name: { $regex: userName, $options: "i" },
       }).select("_id");
 
-      const userIds = users.map((u) => u._id);
-
-      filter.userId = { $in: userIds };
+      filter.userId = {
+        $in: users.map((u) => u._id),
+      };
     }
 
     const data = await Attendance.find(filter)
