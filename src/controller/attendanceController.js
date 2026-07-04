@@ -111,15 +111,22 @@ exports.getMyAttendance = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const data = await Attendance.find({ userId })
-      .sort({ date: -1 });
+    // Current month (YYYY-MM)
+    const currentMonth = moment().format("YYYY-MM");
+
+    const data = await Attendance.find({
+      userId,
+      date: {
+        $gte: `${currentMonth}-01`,
+        $lte: `${currentMonth}-31`,
+      },
+    }).sort({ date: -1 });
 
     res.json(data);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 // ✅ Admin: Get All Attendance
 exports.getAllAttendance = async (req, res) => {
