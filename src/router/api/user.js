@@ -1,15 +1,11 @@
-const express =
-  require("express");
-const { getAllUsers } = require("../../controller/user.controller");
+const express = require("express");
+const { getAllUsers, updateProfile, getMe } = require("../../controller/user.controller");
+const protect = require("../../middlewares/auth.middleware");
 
-const router =
-  express.Router();
+const router = express.Router();
 
-
-
-router.get(
-  "/",
-  getAllUsers
-);
+router.get("/", getAllUsers);
+router.get("/get-me",protect,getMe)
+router.patch("/update-profile", protect, updateProfile);
 
 module.exports = router;

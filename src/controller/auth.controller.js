@@ -42,5 +42,48 @@ const getMe = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+const resetPassword = async (req, res) => {
+  const { email, password } = req.body;
 
-module.exports={register,login,getMe}
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found",
+    });
+  }
+
+  user.password = password;
+
+  await user.save();
+
+  res.json({
+    message: "Password reset successfully",
+  });
+};
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "Email not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+ 
+
+
+module.exports={register,login,getMe,resetPassword,forgotPassword}
