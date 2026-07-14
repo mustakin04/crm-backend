@@ -1,5 +1,6 @@
 const User = require("../models/User.model");
 const generateToken = require("../utils/generateToken");
+const bcrypt = require("bcryptjs");
 
 const register = async (req, res) => {
   try {
@@ -43,23 +44,32 @@ const getMe = async (req, res) => {
   }
 };
 const resetPassword = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  if (!user) {
-    return res.status(404).json({
-      message: "User not found",
+    const user = await User.findOneAndUpdate(
+      { email },
+      { password: hashedPassword },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      message: "Password reset successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: error.message,
     });
   }
-
-  user.password = password;
-
-  await user.save();
-
-  res.json({
-    message: "Password reset successfully",
-  });
 };
 const forgotPassword = async (req, res) => {
   try {
