@@ -1,0 +1,23 @@
+* [33m3653bf1[m[33m ([m[1;31mpersonal/main[m[33m, [m[1;31mpersonal/HEAD[m[33m)[m Delete .github/workflows directory
+[31m|[m * [33m001aa6d[m[33m ([m[1;31mpersonal/mustakindev[m[33m)[m Delete .github/workflows directory
+[31m|[m[31m/[m  
+[31m|[m *   [33m5e39cbe[m[33m ([m[1;31morigin/main[m[33m)[m Merge pull request #23 from iatlasstudy/mustakindev
+[31m|[m [33m|[m[31m\[m  
+[31m|[m [33m|[m[31m/[m  
+[31m|[m[31m/[m[33m|[m   
+* [33m|[m [33m6b7e990[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/mustakindev[m[33m, [m[1;32mmustakindev[m[33m)[m auth.controller,js part updated with bcryptjs for password hashing.
+[34m|[m *   [33m30a517d[m Merge pull request #22 from iatlasstudy/mustakindev
+[34m|[m [35m|[m[34m\[m  
+[34m|[m [35m|[m[34m/[m  
+[34m|[m[34m/[m[35m|[m   
+* [35m|[m [33m39ebda9[m user controller and auth controller updated with new features and bug fixes
+[36m|[m *   [33m29bf8c6[m Merge pull request #20 from iatlasstudy/mustakindev
+[36m|[m [1;31m|[m[36m\[m  
+[36m|[m [1;31m|[m[36m/[m  
+[36m|[m[36m/[m[1;31m|[m   
+* [1;31m|[m [33m37dbb9a[m attendanceController part update
+[1;32m|[m *   [33m114bf03[m Merge pull request #19 from iatlasstudy/mustakindev
+[1;32m|[m [1;33m|[m[1;32m\[m  
+[1;32m|[m [1;33m|[m[1;32m/[m  
+[1;32m|[m[1;32m/[m[1;33m|[m   
+* [1;33m|[m [33m2341858[m attendanceController update

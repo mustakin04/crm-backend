@@ -14,7 +14,7 @@ const allowedOrigins = [
   "https://crm.iatlasstudy.com",  //frontedn
   "https://sensational-kheer-8f473b.netlify.app",
 ];
-
+// ok cool
 app.use(
   cors({
     origin: function (origin, callback) {
